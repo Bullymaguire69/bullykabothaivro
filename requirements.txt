@@ -58,4 +58,3 @@ motor
 telegram
 gpytranslate
 yt_dlp
-youtube_search_python
