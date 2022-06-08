@@ -141,4 +141,7 @@ async def download_video(v_url):
             supports_streaming=True,
             caption=ytdl_data['title'])
         os.remove(f"{ytdl_data['id']}.mp4")
-__mod_name__ = "Song"
+
+
+__mod_name__ = "Sᴏɴɢ"
+
