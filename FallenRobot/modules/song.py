@@ -1,84 +1,143 @@
 import os
+import time
+import math
 import asyncio
+import shutil
 import requests
-import aiohttp
-import yt_dlp
 
-from pyrogram import filters
-from youtube_search import YoutubeSearch
-from FallenRobot import pbot, SUPPORT_CHAT
+from yt_dlp import YoutubeDL
+from yt_dlp.utils import (DownloadError, ContentTooShortError,
+                              ExtractorError, GeoRestrictedError,
+                              MaxDownloadsReached, PostProcessingError,
+                              UnavailableVideoError, XAttrMetadataError)
+from asyncio import sleep
+from telethon.tl.types import DocumentAttributeAudio
+from collections import deque
+from html import unescape
+
+from FallenRobot.events import register
+from FallenRobot import YOUTUBE_API_KEY
 
 
-def time_to_seconds(time):
-    stringt = str(time)
-    return sum(int(x) * 60**i for i, x in enumerate(reversed(stringt.split(":"))))
 
-
-@pbot.on_message(filters.command(["song", "music", " vsong", "video"]))
-def song(client, message):
-
-    message.delete()
-    user_id = message.from_user.id
-    user_name = message.from_user.first_name
-    chutiya = "[" + user_name + "](tg://user?id=" + str(user_id) + ")"
-
-    query = ""
-    for i in message.command[1:]:
-        query += " " + str(i)
-    print(query)
-    m = message.reply("**» sᴇᴀʀᴄʜɪɴɢ, ᴩʟᴇᴀsᴇ ᴡᴀɪᴛ...**")
-    ydl_opts = {"format": "bestaudio[ext=m4a]"}
+@register(pattern="^/yt(audio|video) (.*)")
+async def download_video(v_url):
+    """ For .ytdl command, download media from YouTube and many other sites. """
+    url = v_url.pattern_match.group(2)
+    type = v_url.pattern_match.group(1).lower()
+    lmao = await v_url.reply("`Preparing to download...`")
+    if type == "audio":
+        opts = {
+            'format':
+            'bestaudio',
+            'addmetadata':
+            True,
+            'key':
+            'FFmpegMetadata',
+            'writethumbnail':
+            True,
+            'prefer_ffmpeg':
+            True,
+            'geo_bypass':
+            True,
+            'nocheckcertificate':
+            True,
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '256',
+            }],
+            'outtmpl':
+            '%(id)s.mp3',
+            'quiet':
+            True,
+            'logtostderr':
+            False
+        }
+        video = False
+        song = True
+    elif type == "video":
+        opts = {
+            'format':
+            'best',
+            'addmetadata':
+            True,
+            'key':
+            'FFmpegMetadata',
+            'prefer_ffmpeg':
+            True,
+            'geo_bypass':
+            True,
+            'nocheckcertificate':
+            True,
+            'postprocessors': [{
+                'key': 'FFmpegVideoConvertor',
+                'preferedformat': 'mp4'
+            }],
+            'outtmpl':
+            '%(id)s.mp4',
+            'logtostderr':
+            False,
+            'quiet':
+            True
+        }
+        song = False
+        video = True
     try:
-        results = YoutubeSearch(query, max_results=1).to_dict()
-        link = f"https://youtube.com{results[0]['url_suffix']}"
-        # print(results)
-        title = results[0]["title"][:40]
-        thumbnail = results[0]["thumbnails"][0]
-        thumb_name = f"thumb{title}.jpg"
-        thumb = requests.get(thumbnail, allow_redirects=True)
-        open(thumb_name, "wb").write(thumb.content)
-
-        duration = results[0]["duration"]
-        url_suffix = results[0]["url_suffix"]
-        views = results[0]["views"]
-
-    except Exception as e:
-        m.edit(
-            "**😴 sᴏɴɢ ɴᴏᴛ ғᴏᴜɴᴅ ᴏɴ ʏᴏᴜᴛᴜʙᴇ.**\n\n» ᴍᴀʏʙᴇ ᴛᴜɴᴇ ɢᴀʟᴛɪ ʟɪᴋʜᴀ ʜᴏ, ᴩᴀᴅʜᴀɪ - ʟɪᴋʜᴀɪ ᴛᴏʜ ᴋᴀʀᴛᴀ ɴᴀʜɪ ᴛᴜ !"
-        )
-        print(str(e))
+        await lmao.edit("`Fetching data, please wait..`")
+        with YoutubeDL(opts) as ytdl:
+            ytdl_data = ytdl.extract_info(url)
+    except DownloadError as DE:
+        await lmao.edit(f'`{DE}`')
         return
-    m.edit("» ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ...\n\nᴩʟᴇᴀsᴇ ᴡᴀɪᴛ...")
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(link, download=False)
-            audio_file = ydl.prepare_filename(info_dict)
-            ydl.process_info(info_dict)
-        rep = f"**ᴛɪᴛʟᴇ :** {title[:25]}\n**ᴅᴜʀᴀᴛɪᴏɴ :** `{duration}`\n**ᴠɪᴇᴡs :** `{views}`\n**ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ​ »** {chutiya}"
-        secmul, dur, dur_arr = 1, 0, duration.split(":")
-        for i in range(len(dur_arr) - 1, -1, -1):
-            dur += int(dur_arr[i]) * secmul
-            secmul *= 60
-        message.reply_audio(
-            audio_file,
-            caption=rep,
-            thumb=thumb_name,
-            parse_mode="md",
-            title=title,
-            duration=dur,
+    except ContentTooShortError:
+        await lmao.edit("`The download content was too short.`")
+        return
+    except GeoRestrictedError:
+        await lmao.edit(
+            "`Video is not available from your geographic location due to geographic restrictions imposed by a website.`"
         )
-        m.delete()
+        return
+    except MaxDownloadsReached:
+        await lmao.edit("`Max-downloads limit has been reached.`")
+        return
+    except PostProcessingError:
+        await lmao.edit("`There was an error during post processing.`")
+        return
+    except UnavailableVideoError:
+        await lmao.edit("`Media is not available in the requested format.`")
+        return
+    except XAttrMetadataError as XAME:
+        await lmao.edit(f"`{XAME.code}: {XAME.msg}\n{XAME.reason}`")
+        return
+    except ExtractorError:
+        await lmao.edit("`There was an error during info extraction.`")
+        return
     except Exception as e:
-        m.edit(
-            f"**» ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴇʀʀᴏʀ, ʀᴇᴩᴏʀᴛ ᴛʜɪs ᴀᴛ​ » [sᴜᴩᴩᴏʀᴛ ᴄʜᴀᴛ](t.me/{SUPPORT_CHAT}) 💕**\n\**ᴇʀʀᴏʀ :** {e}"
-        )
-        print(e)
-
-    try:
-        os.remove(audio_file)
-        os.remove(thumb_name)
-    except Exception as e:
-        print(e)
-
-
-__mod_name__ = "Sᴏɴɢ"
+        await lmao.edit(f'{str(type(e)): {e}}')
+        return
+    c_time = time.time()
+    if song:
+        await lmao.edit(f"`Preparing to upload song:`\
+        \n**{ytdl_data['title']}**\
+        \nby *{ytdl_data['uploader']}*")
+        await v_url.client.send_file(
+            v_url.chat_id,
+            f"{ytdl_data['id']}.mp3",
+            supports_streaming=True,
+            attributes=[
+                DocumentAttributeAudio(duration=int(ytdl_data['duration']),
+                                       title=str(ytdl_data['title']),
+                                       performer=str(ytdl_data['uploader']))
+            ])
+        os.remove(f"{ytdl_data['id']}.mp3")
+    elif video:
+        await lmao.edit(f"`Preparing to upload video:`\
+        \n**{ytdl_data['title']}**\
+        \nby *{ytdl_data['uploader']}*")
+        await v_url.client.send_file(
+            v_url.chat_id,
+            f"{ytdl_data['id']}.mp4",
+            supports_streaming=True,
+            caption=ytdl_data['title'])
+        os.remove(f"{ytdl_data['id']}.mp4")
