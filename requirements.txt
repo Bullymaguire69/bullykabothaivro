@@ -58,4 +58,4 @@ motor
 telegram
 gpytranslate
 yt_dlp
-opencv-python-headless==4.4.0.44
+opencv-python-headless==4.6.0.66
