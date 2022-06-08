@@ -8,8 +8,8 @@ import requests
 
 from pyrogram import filters
 from pyrogram.types import Message
-from scenario import pgram, BOT_USERNAME
-from scenario.utils.pluginhelp import get_text, progress
+from FallenRobot import pgram, BOT_USERNAME
+from FallenRobot.utils.pluginhelp import get_text, progress
 from youtube_search import YoutubeSearch
 from youtubesearchpython import SearchVideos
 
