@@ -3,7 +3,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from FallenRobot import user_time
 from config import youtube_next_fetch
-from helper_extra.ytdlfunc import extractYt, create_buttons
+from FallenRobot.helper_extra.ytdlfunc import extractYt, create_buttons
 import wget
 import os
 from PIL import Image
