@@ -1,84 +1,69 @@
+from datetime import datetime, timedelta
+from pyrogram import Client, Filters, InlineKeyboardMarkup, InlineKeyboardButton
+from bot import user_time
+from config import youtube_next_fetch
+from helper.ytdlfunc import extractYt, create_buttons
+import wget
 import os
-import asyncio
-import requests
-import aiohttp
-import yt_dlp
-
-from pyrogram import filters
-from youtube_search import YoutubeSearch
-from FallenRobot import pbot, SUPPORT_CHAT
+from PIL import Image
 
 
-def time_to_seconds(time):
-    stringt = str(time)
-    return sum(int(x) * 60**i for i, x in enumerate(reversed(stringt.split(":"))))
+user_time = {}
+youtube_next_fetch = 0
 
 
-@pbot.on_message(filters.command(["song", "music", " vsong", "video"]))
-def song(client, message):
+ytregex = r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"
 
-    message.delete()
-    user_id = message.from_user.id
-    user_name = message.from_user.first_name
-    chutiya = "[" + user_name + "](tg://user?id=" + str(user_id) + ")"
 
-    query = ""
-    for i in message.command[1:]:
-        query += " " + str(i)
-    print(query)
-    m = message.reply("**» sᴇᴀʀᴄʜɪɴɢ, ᴩʟᴇᴀsᴇ ᴡᴀɪᴛ...**")
-    ydl_opts = {"format": "bestaudio[ext=m4a]"}
+@Client.on_message(Filters.regex(ytregex))
+async def ytdl(_, message):
+    userLastDownloadTime = user_time.get(message.chat.id)
     try:
-        results = YoutubeSearch(query, max_results=1).to_dict()
-        link = f"https://youtube.com{results[0]['url_suffix']}"
-        # print(results)
-        title = results[0]["title"][:40]
-        thumbnail = results[0]["thumbnails"][0]
-        thumb_name = f"thumb{title}.jpg"
-        thumb = requests.get(thumbnail, allow_redirects=True)
-        open(thumb_name, "wb").write(thumb.content)
+        if userLastDownloadTime > datetime.now():
+            wait_time = round((userLastDownloadTime - datetime.now()).total_seconds() / 60, 2)
+            await message.reply_text(f"`Wait {wait_time} Minutes before next Request`")
+            return
+    except:
+        pass
 
-        duration = results[0]["duration"]
-        url_suffix = results[0]["url_suffix"]
-        views = results[0]["views"]
+    url = message.text.strip()
+    await message.reply_chat_action("typing")
+    try:
+        title, thumbnail_url, formats = extractYt(url)
 
-    except Exception as e:
-        m.edit(
-            "**😴 sᴏɴɢ ɴᴏᴛ ғᴏᴜɴᴅ ᴏɴ ʏᴏᴜᴛᴜʙᴇ.**\n\n» ᴍᴀʏʙᴇ ᴛᴜɴᴇ ɢᴀʟᴛɪ ʟɪᴋʜᴀ ʜᴏ, ᴩᴀᴅʜᴀɪ - ʟɪᴋʜᴀɪ ᴛᴏʜ ᴋᴀʀᴛᴀ ɴᴀʜɪ ᴛᴜ !"
-        )
-        print(str(e))
+        now = datetime.now()
+        user_time[message.chat.id] = now + \
+                                     timedelta(minutes=youtube_next_fetch)
+
+    except Exception:
+        await message.reply_text("`Failed To Fetch Youtube Data... 😔 \nPossible Youtube Blocked server ip \n#error`")
         return
-    m.edit("» ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ...\n\nᴩʟᴇᴀsᴇ ᴡᴀɪᴛ...")
+    buttons = InlineKeyboardMarkup(list(create_buttons(formats)))
+    sentm = await message.reply_text("Processing Youtube Url 🔎 🔎 🔎")
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(link, download=False)
-            audio_file = ydl.prepare_filename(info_dict)
-            ydl.process_info(info_dict)
-        rep = f"**ᴛɪᴛʟᴇ :** {title[:25]}\n**ᴅᴜʀᴀᴛɪᴏɴ :** `{duration}`\n**ᴠɪᴇᴡs :** `{views}`\n**ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ​ »** {chutiya}"
-        secmul, dur, dur_arr = 1, 0, duration.split(":")
-        for i in range(len(dur_arr) - 1, -1, -1):
-            dur += int(dur_arr[i]) * secmul
-            secmul *= 60
-        message.reply_audio(
-            audio_file,
-            caption=rep,
-            thumb=thumb_name,
-            parse_mode="md",
-            title=title,
-            duration=dur,
-        )
-        m.delete()
-    except Exception as e:
-        m.edit(
-            f"**» ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴇʀʀᴏʀ, ʀᴇᴩᴏʀᴛ ᴛʜɪs ᴀᴛ​ » [sᴜᴩᴩᴏʀᴛ ᴄʜᴀᴛ](t.me/{SUPPORT_CHAT}) 💕**\n\**ᴇʀʀᴏʀ :** {e}"
-        )
-        print(e)
-
-    try:
-        os.remove(audio_file)
-        os.remove(thumb_name)
+        # Todo add webp image support in thumbnail by default not supported by pyrogram
+        # https://www.youtube.com/watch?v=lTTajzrSkCw
+        img = wget.download(thumbnail_url)
+        im = Image.open(img).convert("RGB")
+        output_directory = os.path.join(os.getcwd(), "downloads", str(message.chat.id))
+        if not os.path.isdir(output_directory):
+            os.makedirs(output_directory)
+        thumb_image_path = f"{output_directory}.jpg"
+        im.save(thumb_image_path,"jpeg")
+        await message.reply_photo(thumb_image_path, caption=title, reply_markup=buttons)
+        await sentm.delete()
     except Exception as e:
         print(e)
+        try:
+            thumbnail_url = "https://telegra.ph/file/ce37f8203e1903feed544.png"
+            await message.reply_photo(thumbnail_url, caption=title, reply_markup=buttons)
+        except Exception as e:
+            await sentm.edit(
+            f"<code>{e}</code> #Error")
 
 
 __mod_name__ = "Sᴏɴɢ"
+
+
+
+
