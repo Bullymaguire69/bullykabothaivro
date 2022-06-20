@@ -7,10 +7,7 @@ client = MongoClient(MONGO_DB_URI)
 db = client["FallenRobot"]
 
 coupledb = db.couple
-karmadb = db.karma
-
-
-
+usersdb = db.users
 
 
 async def _get_lovers(chat_id: int):
@@ -36,48 +33,6 @@ async def save_couple(chat_id: int, date: str, couple: dict):
     coupledb.update_one({"chat_id": chat_id}, {"$set": {"couple": lovers}}, upsert=True)
 
 
-
-
-
-async def get_karmas_count() -> dict:
-    chats = karmadb.find({"chat_id": {"$lt": 0}})
-    if not chats:
-        return {}
-    chats_count = 0
-    karmas_count = 0
-    for chat in await chats.to_list(length=1000000):
-        for i in chat["karma"]:
-            karmas_count += chat["karma"][i]["karma"]
-        chats_count += 1
-    return {"chats_count": chats_count, "karmas_count": karmas_count}
-
-
-async def get_karmas(chat_id: int) -> Dict[str, int]:
-    karma = karmadb.find_one({"chat_id": chat_id})
-    if karma:
-        karma = karma["karma"]
-    else:
-        karma = {}
-    return karma
-
-
-async def get_karma(chat_id: int, name: str) -> Union[bool, dict]:
-    name = name.lower().strip()
-    karmas = await get_karmas(chat_id)
-    if name in karmas:
-        return karmas[name]
-
-
-async def update_karma(chat_id: int, name: str, karma: dict):
-    name = name.lower().strip()
-    karmas = await get_karmas(chat_id)
-    karmas[name] = karma
-    karmadb.update_one({"chat_id": chat_id}, {"$set": {"karma": karmas}}, upsert=True)
-
-
-
-
-
 async def int_to_alpha(user_id: int) -> str:
     alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
     text = ""
@@ -95,3 +50,32 @@ async def alpha_to_int(user_id_alphabet: str) -> int:
         user_id += str(index)
     user_id = int(user_id)
     return user_id
+
+
+async def is_afk(user_id: int) -> bool:
+    user = await usersdb.find_one({"user_id": user_id})
+    if not user:
+        return False, {}
+    return True, user["reason"]
+
+
+async def add_afk(user_id: int, mode):
+    await usersdb.update_one(
+        {"user_id": user_id}, {"$set": {"reason": mode}}, upsert=True
+    )
+
+
+async def remove_afk(user_id: int):
+    user = await usersdb.find_one({"user_id": user_id})
+    if user:
+        return await usersdb.delete_one({"user_id": user_id})
+
+
+async def get_afk_users() -> list:
+    users = usersdb.find({"user_id": {"$gt": 0}})
+    if not users:
+        return []
+    users_list = []
+    for user in await users.to_list(length=1000000000):
+        users_list.append(user)
+    return users_list
