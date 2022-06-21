@@ -195,6 +195,13 @@ WOLVES = list(WOLVES)
 DEMONS = list(DEMONS)
 TIGERS = list(TIGERS)
 
+pgram = Client(
+    session_name,
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=TOKEN,
+)
+
 # Load at end to ensure all prev variables have been set
 from FallenRobot.modules.helper_funcs.handlers import (
     CustomCommandHandler,
