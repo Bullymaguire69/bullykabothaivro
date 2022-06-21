@@ -41,12 +41,13 @@ async def lel(bot, message):
     await asyncio.sleep(1.5)
     return await message.reply_text(text=ran)
 
-_mod_name_ = "Sʜᴀʏʀɪ"
 
-_help_ = """
+__mod_name__ = "Sʜᴀʏᴀʀɪ"
 
-ʙᴏᴛ ᴡɪʟʟ sᴇɴᴅ ʀᴏᴍᴀɴᴛɪᴄ sʜʏᴀʀɪ
+__help__ = """
 
-/romantic :receive shyari
+ᴍᴀᴋᴇs ᴀ sʜᴀʏᴀʀɪ ᴀɴᴅ sᴇɴᴅ ɪᴛ ᴛᴏ ʏᴏᴜ.
 
-"""
+❍ /shayari *:* ᴍᴀᴋᴇs sʜᴀʏᴀʀɪ ɪғ ʏᴏᴜ sᴇɴᴅ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ
+
+ """
