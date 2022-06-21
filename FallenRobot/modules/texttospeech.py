@@ -7,9 +7,9 @@ from telethon.tl import functions
 from telethon.tl import types
 from telethon.tl.types import *
 
-from AbishnoiRobot import *
-from AbishnoiRobot import telethn as tbot
-from AbishnoiRobot.events import register
+from FallenRobot import *
+from FallenRobot import telethn as tbot
+from FallenRobot.events import register
 
 
 @register(pattern="^/tts (.*)")
@@ -59,3 +59,10 @@ async def _(event):
 
 
 __mod_name__ = "ᴛᴇxᴛ ᴛᴏ sᴘᴇᴇᴄʜ"
+
+
+_help_ = """
+
+ᴄᴏɴᴠᴇʀᴛ ᴛᴇxᴛ ᴍᴇssᴀɢᴇs ᴛᴏ ᴠᴏɪᴄᴇ ᴍᴇssᴀɢᴇs
+
+
