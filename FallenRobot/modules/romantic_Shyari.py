@@ -40,3 +40,13 @@ async def lel(bot, message):
     await bot.send_chat_action(message.chat.id, "typing")
     await asyncio.sleep(1.5)
     return await message.reply_text(text=ran)
+
+_mod_name_ = "Sʜᴀʏʀɪ"
+
+_help_ = """
+
+ʙᴏᴛ ᴡɪʟʟ sᴇɴᴅ ʀᴏᴍᴀɴᴛɪᴄ sʜʏᴀʀɪ
+
+/romantic :receive shyari
+
+"""
