@@ -1,6 +1,6 @@
 import random
 import asyncio
-from pyrogram import filters
+from pbot import filters
 from FallenRobot import pgram as scenario
 
 
