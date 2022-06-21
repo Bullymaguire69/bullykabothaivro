@@ -1,7 +1,7 @@
 import random
 import asyncio
-from pgram import filters
-from FallenRobot import pgram as Fallen
+from pyrogram import filters
+from FallenRobot import pbot as FallenRobot
 
 
 
