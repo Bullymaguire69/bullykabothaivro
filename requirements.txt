@@ -62,3 +62,4 @@ opencv-python-headless
 youtube_search_python
 python-arq
 gtts
+python-3.8.5
