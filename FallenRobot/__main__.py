@@ -5,7 +5,6 @@ from sys import argv
 from typing import Optional
 import scenario.modules.sql.users_sql as sql
 
-
 from FallenRobot import (
     ALLOW_EXCL,
     OWNER_USERNAME,
