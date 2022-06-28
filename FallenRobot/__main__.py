@@ -3,7 +3,7 @@ import time
 import re
 from sys import argv
 from typing import Optional
-import scenario.modules.sql.users_sql as sql
+import FallenRobot.modules.sql.users_sql as sql
 
 from FallenRobot import (
     ALLOW_EXCL,
