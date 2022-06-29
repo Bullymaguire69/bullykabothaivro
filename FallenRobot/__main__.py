@@ -3,8 +3,6 @@ import time
 import re
 from sys import argv
 from typing import Optional
-import FallenRobot.modules.sql.users_sql as sql
-
 
 from FallenRobot import (
     ALLOW_EXCL,
@@ -78,14 +76,7 @@ def get_readable_time(seconds: int) -> str:
 
 
 PM_START_TEXT = """
-*ʜᴇʏ,\n ᴛʜɪs ɪs 𝙱𝚄𝙻𝙻𝚈 ✘ ʀᴏʙᴏᴛ*
-*(https://te.legra.ph/file/380118372c4f02dc3fef6.jpg)
-*I am {} Anime themed advance group management bot with a lot of Sexy Features.*
-➖➖➖➖➖➖➖➖➖➖➖➖➖
-• *Uptime:* `{}`
-• `{}` *users, across* `{}` *chats.*
-➖➖➖➖➖➖➖➖➖➖➖➖➖
-➛ Try The Help Buttons Below To Know My Abilities ××
+*ʜᴇʏ,\n ᴛʜɪs ɪs 𝙱𝚄𝙻𝙻𝚈 ✘ ʀᴏʙᴏᴛ* [!](https://te.legra.ph/file/380118372c4f02dc3fef6.jpg)\n\n *ɪ ᴀᴍ ᴛʜᴇ ᴍᴏsᴛ ᴘᴏᴡᴇʀꜰᴜʟ ɢʀᴏᴜᴘ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ ʙᴏᴛ ᴏꜰ ᴛᴇʟᴇɢʀᴀᴍ.\n  ɪ ʜᴀᴠᴇ ᴀᴡᴇsᴏᴍᴇ ꜰᴇᴀᴛᴜʀᴇs ᴀɴᴅ ɴᴏ ᴏɴᴇ ᴄᴀɴ ʙᴇᴀᴛ ᴍᴇ\nꜰᴏʀ ɢᴇᴛᴛɪɴɢ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ ᴀʙᴏᴜᴛ ᴍʏ ᴄᴏᴍᴍᴀɴᴅs ᴄʟɪᴄᴋ ᴏɴ ᴄᴏᴍᴍᴀɴᴅs ʙᴜᴛᴛᴏɴ ᴏʀ ʜɪᴛ*​ /help
 """
 
 buttons = [
